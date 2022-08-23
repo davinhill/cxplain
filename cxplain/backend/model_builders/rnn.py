@@ -18,8 +18,8 @@ DEALINGS IN THE SOFTWARE.
 import numpy as np
 import tensorflow.keras.backend as K
 from cxplain.backend.model_builders.base_model_builder import BaseModelBuilder
-from tensorflow.python.keras.layers import Dense, BatchNormalization, Dropout, Embedding, Lambda
-
+from tensorflow.python.keras.layers import Dense, Dropout, Embedding, Lambda
+from tensorflow.keras.layers import BatchNormalization
 
 class RNNModelBuilder(BaseModelBuilder):
     def __init__(self, num_layers=2, num_units=64, activation="relu", with_bn=False, p_dropout=0.0,
