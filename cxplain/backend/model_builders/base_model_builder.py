@@ -20,15 +20,21 @@ import numpy as np
 import collections
 import tensorflow as tf
 from functools import partial
-import tensorflow.keras.backend as K
 from abc import ABCMeta, abstractmethod
-from tensorflow.python.keras.models import Model
 from cxplain.backend.validation import Validation
 from cxplain.backend.causal_loss import causal_loss
 from cxplain.backend.masking.masking_util import MaskingUtil
-from tensorflow.python.keras.backend import resize_images, resize_volumes
-from tensorflow.python.keras.callbacks import ModelCheckpoint, EarlyStopping
-from tensorflow.python.keras.layers import Input, Dense, Flatten, Lambda, Reshape
+import tensorflow.keras.backend as K
+# from tensorflow.python.keras.models import Model
+# from tensorflow.python.keras.backend import resize_images, resize_volumes
+# from tensorflow.python.keras.callbacks import ModelCheckpoint, EarlyStopping
+# from tensorflow.python.keras.layers import Input, Dense, Flatten, Lambda, Reshape
+
+from tensorflow import keras
+from keras.models import Model
+from keras.backend import resize_images, resize_volumes
+from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.layers import Input, Dense, Flatten, Lambda, Reshape
 
 
 @six.add_metaclass(ABCMeta)
@@ -57,6 +63,7 @@ class BaseModelBuilder(object):
         raise NotImplementedError()
 
     def build_explanation_model(self, input_dim, output_dim, loss, downsample_factors=(1,)):
+        # import pdb; pdb.set_trace()
         num_indices, num_channels, steps, downsampling_factor =\
             MaskingUtil.get_input_constants(input_dim, downsample_factors)
 
@@ -95,6 +102,7 @@ class BaseModelBuilder(object):
         causal_loss_fun.__name__ = "causal_loss"
 
         if downsampling_factor != 1:
+            steps = steps.astype('int') # added this to fix bug
             last_layer = Reshape(tuple(steps) + (1,))(last_layer)
 
             if len(steps) == 1:
@@ -153,6 +161,7 @@ class BaseModelBuilder(object):
         else:
             opt = tf.compat.v1.train.AdamOptimizer(learning_rate=learning_rate)
 
+        # import pdb; pdb.set_trace()
         model.compile(loss=losses,
                       loss_weights=loss_weights,
                       optimizer=opt,
@@ -169,8 +178,10 @@ class BaseModelBuilder(object):
 
         # Perform an initial model save so that one version of the model is always saved
         # even if model fitting or check-pointing fails.
+        # import pdb; pdb.set_trace()
         model.save_weights(model_filepath)
 
+        # import pdb; pdb.set_trace()
         history = model.fit(x=precomputed,
                             # We must feed two extra outputs due to a bug in TensorFlow < 1.15.0rc0 that would not
                             # allow saving models without connecting all inputs to output nodes.
